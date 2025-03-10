@@ -15,6 +15,9 @@ Hey เป็นเครื่องมือทดสอบประสิท�
 # ใช้ Go สำหรับติดตั้ง
 go install github.com/rakyll/hey@latest
 
+# หรือ ด้วย apt (Linux)
+sudo apt install hey
+
 # หรือ ด้วย Homebrew (macOS)
 brew install hey
 
