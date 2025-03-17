@@ -1,0 +1,173 @@
+@startuml eduroam-api-sequence-with-sp
+
+actor User
+boundary "Frontend (React)" as Frontend
+control "API Router" as Router
+participant "AuthHandler" as AuthHandler
+participant "EduroamHandler" as EduroamHandler
+participant "AdminHandler" as AdminHandler
+participant "AuthService" as AuthService
+participant "VerificationService" as VerificationService
+participant "EduroamService" as EduroamService
+participant "QuickwitClient" as QuickwitClient
+database "PostgreSQL" as DB
+
+' User Registration Flow
+group User Registration
+    User -> Frontend: 1. Submit email for signup
+    Frontend -> Router: 2. POST /api/auth/signup
+    Router -> AuthHandler: 3. Call Signup()
+    AuthHandler -> AuthService: 4. CreateUser()
+    AuthService -> DB: 5. Insert new user
+    DB --> AuthService: 6. Return user ID
+    AuthHandler -> VerificationService: 7. SendVerificationCode()
+    VerificationService -> DB: 8. Store verification code
+    VerificationService -> AuthHandler: 9. Email sent
+    AuthHandler --> Frontend: 10. Success response
+    Frontend --> User: 11. Show verification message
+    
+    User -> Frontend: 12. Submit verification code
+    Frontend -> Router: 13. POST /api/auth/verify
+    Router -> AuthHandler: 14. Call Verify()
+    AuthHandler -> VerificationService: 15. VerifyCode()
+    VerificationService -> DB: 16. Fetch verification code
+    DB --> VerificationService: 17. Return code
+    VerificationService -> AuthHandler: 18. Verification success
+    AuthHandler -> AuthService: 19. GenerateToken()
+    AuthService --> AuthHandler: 20. JWT token
+    AuthHandler --> Frontend: 21. Return token
+    Frontend --> User: 22. Show success, store token
+end
+
+' User Login Flow
+group User Login
+    User -> Frontend: 1. Submit email for login
+    Frontend -> Router: 2. POST /api/auth/login
+    Router -> AuthHandler: 3. Call Login()
+    AuthHandler -> AuthService: 4. GetUserByEmail()
+    AuthService -> DB: 5. Query user
+    DB --> AuthService: 6. Return user data
+    AuthHandler -> VerificationService: 7. SendVerificationCode()
+    VerificationService -> DB: 8. Store login code
+    VerificationService -> AuthHandler: 9. Email sent
+    AuthHandler --> Frontend: 10. Success response
+    Frontend --> User: 11. Show verification message
+    
+    User -> Frontend: 12. Submit verification code
+    Frontend -> Router: 13. POST /api/auth/verify
+    Router -> AuthHandler: 14. Call Verify()
+    AuthHandler -> VerificationService: 15. VerifyCode()
+    VerificationService -> DB: 16. Fetch verification code
+    DB --> VerificationService: 17. Return code
+    VerificationService -> AuthHandler: 18. Verification success
+    AuthHandler -> AuthService: 19. GenerateToken()
+    AuthService -> DB: 20. Update last_login
+    AuthService --> AuthHandler: 21. JWT token
+    AuthHandler --> Frontend: 22. Return token
+    Frontend --> User: 23. Show success, store token
+end
+
+' My Usage Data Flow
+group Get My Usage Data
+    User -> Frontend: 1. Request my usage data
+    Frontend -> Router: 2. GET /api/eduroam/my-usage?days=N
+    note right of Router: JWT token in Authorization header
+    Router -> AuthService: 3. Call middleware ValidateToken()
+    AuthService -> DB: 4. Check token
+    DB --> AuthService: 5. Token valid
+    Router -> EduroamHandler: 6. Call GetMyUsage()
+    EduroamHandler -> AuthService: 7. GetUserById()
+    AuthService -> DB: 8. Query user
+    DB --> AuthService: 9. Return user data
+    EduroamHandler -> EduroamService: 10. GetUserUsage()
+    EduroamService -> QuickwitClient: 11. SendRequest()
+    QuickwitClient --> EduroamService: 12. Return Quickwit data
+    EduroamService -> EduroamService: 13. processUserUsage()
+    note right of EduroamService: Process and group data\nby date and service provider
+    EduroamService --> EduroamHandler: 14. Return processed data
+    EduroamHandler --> Frontend: 15. JSON response
+    Frontend -> Frontend: 16. Format data in view
+    Frontend --> User: 17. Display usage data
+end
+
+' Domain Access Data Flow (IdP)
+group Get Domain Data (IdP)
+    User -> Frontend: 1. Request IdP domain data
+    Frontend -> Router: 2. GET /api/eduroam/idp/{domain}?days=N
+    note right of Router: JWT token in Authorization header
+    Router -> AuthService: 3. Call middleware ValidateToken()
+    AuthService -> DB: 4. Check token
+    DB --> AuthService: 5. Token valid
+    Router -> AdminHandler: 6. Call DomainAccessMiddleware()
+    AdminHandler -> DB: 7. Check domain access
+    DB --> AdminHandler: 8. Access permitted
+    Router -> EduroamHandler: 9. Call GetIdpData()
+    EduroamHandler -> EduroamService: 10. GetIdpData()
+    EduroamService -> EduroamService: 11. normalizeRealmName()
+    EduroamService -> QuickwitClient: 12. SendRequest()
+    QuickwitClient --> EduroamService: 13. Return Quickwit data
+    EduroamService -> EduroamService: 14. processIdpAggregations()
+    EduroamService --> EduroamHandler: 15. Return processed data
+    EduroamHandler --> Frontend: 16. JSON response
+    Frontend -> Frontend: 17. Format data in view
+    Frontend --> User: 18. Display IdP data
+end
+
+' Service Provider Data Flow (SP)
+group Get Service Provider Data (SP)
+    User -> Frontend: 1. Request SP data
+    Frontend -> Router: 2. GET /api/eduroam/sp/{service_provider}?days=N
+    note right of Router: JWT token in Authorization header
+    Router -> AuthService: 3. Call middleware ValidateToken()
+    AuthService -> DB: 4. Check token
+    DB --> AuthService: 5. Token valid
+    Router -> EduroamHandler: 6. Call GetSpData()
+    EduroamHandler -> EduroamService: 7. GetSpData()
+    EduroamService -> EduroamService: 8. normalizeRealmName()
+    note right of EduroamService: Normalize SP name for query
+    EduroamService -> QuickwitClient: 9. SendRequest()
+    note right of QuickwitClient: Query with service_provider filter
+    QuickwitClient --> EduroamService: 10. Return Quickwit data
+    EduroamService -> EduroamService: 11. processSpAggregations()
+    note right of EduroamService: Process data by realms and users
+    EduroamService --> EduroamHandler: 12. Return processed data
+    EduroamHandler --> Frontend: 13. JSON response
+    Frontend -> Frontend: 14. Format data in view
+    Frontend --> User: 15. Display SP data
+end
+
+' Admin Flow for Domain Management
+group Admin Domain Management
+    User -> Frontend: 1. Request to assign domain
+    Frontend -> Router: 2. POST /api/admin/users/{id}/domains
+    Router -> AuthService: 3. Call middleware ValidateToken()
+    AuthService -> DB: 4. Check token
+    DB --> AuthService: 5. Token valid
+    Router -> AdminHandler: 6. Call AdminMiddleware()
+    AdminHandler -> AdminHandler: 7. IsAdmin()
+    AdminHandler -> DB: 8. Check admin status
+    DB --> AdminHandler: 9. User is admin
+    Router -> AdminHandler: 10. Call AssignDomain()
+    AdminHandler -> DB: 11. Insert domain access
+    DB --> AdminHandler: 12. Domain assigned
+    AdminHandler --> Frontend: 13. Success response
+    Frontend --> User: 14. Show success message
+end
+
+' Logout Flow
+group User Logout
+    User -> Frontend: 1. Request logout
+    Frontend -> Router: 2. POST /api/auth/logout
+    Router -> AuthService: 3. Call middleware ValidateToken()
+    AuthService -> DB: 4. Check token
+    DB --> AuthService: 5. Token valid
+    Router -> AuthHandler: 6. Call Logout()
+    AuthHandler -> AuthService: 7. InvalidateToken()
+    AuthService -> DB: 8. Blacklist token
+    DB --> AuthService: 9. Token invalidated
+    AuthHandler --> Frontend: 10. Logout success
+    Frontend -> Frontend: 11. Clear token from storage
+    Frontend --> User: 12. Redirect to login
+end
+
+@enduml

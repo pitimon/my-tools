@@ -1,0 +1,156 @@
+@startuml eduroam-api
+
+' Core Packages
+package "api" {
+  class EduroamHandler {
+    -eduroamService: *eduroam.Service
+    -authService: *auth.Service
+    +GetIdpData(c *gin.Context)
+    +GetSpData(c *gin.Context)
+    +GetMyUsage(c *gin.Context)
+  }
+  
+  class AdminHandler {
+    -adminService: *auth.AdminService
+    +GetUsers(c *gin.Context)
+    +GetDomains(c *gin.Context)
+    +AssignDomain(c *gin.Context)
+    +DomainAccessMiddleware(c *gin.Context)
+  }
+  
+  class AuthHandler {
+    -authService: *auth.Service
+    -verificationService: *auth.VerificationService
+    +Login(c *gin.Context)
+    +Verify(c *gin.Context)
+    +Signup(c *gin.Context)
+    +GetProfile(c *gin.Context)
+    +Logout(c *gin.Context)
+  }
+}
+
+package "auth" {
+  class Service {
+    -db: *sql.DB
+    -tokenSecret: string
+    +NewService(db *sql.DB, tokenSecret string) *Service
+    +GetUserById(id int64) (*User, error)
+    +GenerateToken(userID int64) (string, error)
+    +InvalidateToken(token string) error
+    +ValidateToken(token string) (int64, error)
+  }
+  
+  class VerificationService {
+    -repo: *Repository
+    -config: VerificationConfig
+    +NewVerificationService(repo *Repository, config VerificationConfig) *VerificationService
+    +SendVerificationCode(email string, purpose string) error
+    +VerifyCode(email string, code string, purpose string) (bool, error)
+  }
+  
+  class AdminService {
+    -db: *sql.DB
+    +NewAdminService(db *sql.DB) *AdminService
+    +IsAdmin(userID int64) (bool, error)
+    +GetDomains() ([]string, error)
+    +AddDomain(domain string) error
+    +HasDomainAccess(userID int64, domain string) (bool, error)
+  }
+  
+  class Repository {
+    -db: *sql.DB
+    +NewRepository(db *sql.DB) *Repository
+    +GetUserByEmail(email string) (*User, error)
+    +CreateUser(email string) (*User, error)
+    +StoreVerificationCode(userID int64, code string, purpose string, expiresAt time.Time) error
+    +GetVerificationCode(userID int64, purpose string) (string, time.Time, error)
+  }
+  
+  class User {
+    +ID: int64
+    +Email: string
+    +Verified: bool
+    +CreatedAt: time.Time
+    +LastLogin: time.Time
+  }
+  
+  class VerificationConfig {
+    +CodeLength: int
+    +CodeExpiry: time.Duration
+    +LoginCodeExpiry: time.Duration
+    +RateLimitAttempts: int
+  }
+  
+  class Middleware {
+    +AuthMiddleware(authService *Service) gin.HandlerFunc
+  }
+}
+
+package "eduroam" {
+  class Service {
+    -QWURL: string
+    -QWUser: string
+    -QWPassword: string
+    +NewService(url, user, password string) *Service
+    +GetIdpData(domain string, days int) (map[string]interface{}, error)
+    +GetSpData(serviceProvider string, days int) (map[string]interface{}, error)
+    +GetUserUsage(email string, days int, maxResults int) (map[string]interface{}, error)
+  }
+  
+  class QuickwitClient {
+    -url: string
+    -username: string
+    -password: string
+    +NewQuickwitClient(url, username, password string) *QuickwitClient
+    +SendRequest(ctx context.Context, query map[string]interface{}) (map[string]interface{}, error)
+  }
+}
+
+package "database" {
+  class Database {
+    +GetDB() *sql.DB
+    +InitDB(connStr string) (*sql.DB, error)
+    +RunMigrations(db *sql.DB, migrationsPath string) error
+  }
+}
+
+package "config" {
+  class Config {
+    +GetJWTSecret() string
+    +GetQuickwitConfig() QuickwitConfig
+    +GetDBConfig() DatabaseConfig
+  }
+  
+  class QuickwitConfig {
+    +URL: string
+    +User: string
+    +Password: string
+  }
+  
+  class DatabaseConfig {
+    +Host: string
+    +Port: int
+    +DBName: string
+    +User: string
+    +Password: string
+  }
+}
+
+' Relationships
+EduroamHandler --> "1" eduroam.Service
+EduroamHandler --> "1" auth.Service
+AdminHandler --> "1" auth.AdminService
+AuthHandler --> "1" auth.Service
+AuthHandler --> "1" auth.VerificationService
+
+Service --> "1" database.Database
+VerificationService --> "1" Repository
+AdminService --> "1" database.Database
+Repository --> "1" database.Database
+
+Service --> "*" User
+Repository --> "*" User
+
+eduroam.Service --> "1" QuickwitClient
+
+@enduml
