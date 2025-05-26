@@ -10,7 +10,7 @@
 - A/B testing capabilities
 
 ### System Architecture
-
+![image](./pics/caddy-01.png)
 ```plantuml
 @startuml E-commerce Security Gateway
 !define RECTANGLE class
@@ -215,7 +215,7 @@ www.company.com {
 - Multi-factor authentication
 
 ### System Architecture
-
+![image](./pics/caddy-02.png)
 ```plantuml
 @startuml Healthcare System Gateway
 !define RECTANGLE class
@@ -450,7 +450,7 @@ api.hospital.com {
 - Scalable device authentication
 
 ### System Architecture
-
+![image](./pics/caddy-03.png)
 ```plantuml
 @startuml Manufacturing IoT Gateway
 !define RECTANGLE class
@@ -764,7 +764,7 @@ stream.manufacturing.com {
 - Regulatory audit trails
 
 ### System Architecture
-
+![image](./pics/caddy-04.png)
 ```plantuml
 @startuml Financial Services Gateway
 !define RECTANGLE class
@@ -1172,7 +1172,7 @@ partners-api.bank.com {
 - High availability for critical services
 
 ### System Architecture
-
+![image](./pics/caddy-05.png)
 ```plantuml
 @startuml Government Digital Services
 !define RECTANGLE class
