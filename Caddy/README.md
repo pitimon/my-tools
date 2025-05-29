@@ -1,5 +1,5 @@
 ## 🎯 สรุปสำคัญ: Enterprise Caddy Implementation
-- [podcast]([./pics/Caddy%20สำหรับองค์กร_%20เรียบง่าย%20ทรงพลัง%20ปลอดภัย.wav](https://nc.thaicloud.ai/index.php/f/6997))
+- [podcast](https://nc.thaicloud.ai/index.php/f/6997))
 - [detail](./ReadmeExpand.md)
 - [A/B deployment](./a-b-deploy.md)
 
