@@ -1,8 +1,11 @@
 ## 🎯 สรุปสำคัญ: Enterprise Caddy Implementation
-- [My-podcast](https://nc.thaicloud.ai/index.php/s/jptizLdTrW8iAm4)
+---
+- [MyPodcast#1](https://nc.thaicloud.ai/index.php/s/jptizLdTrW8iAm4)
+- [MyPodcast#2](https://nc.thaicloud.ai/index.php/s/CA8beMNpZNn7LLN)
+---
 - [detail](./ReadmeExpand.md)
 - [A/B deployment](./a-b-deploy.md)
-
+---
 ### **ข้อดีหลักของ Caddy ในองค์กร:**
 
 #### **1. Simplicity vs Enterprise Features**
