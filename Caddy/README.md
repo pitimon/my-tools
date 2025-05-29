@@ -1,4 +1,6 @@
 ## 🎯 สรุปสำคัญ: Enterprise Caddy Implementation
+- [detail](./ReadmeExpand.md)
+- [A/B deployment](./a-b-deploy.md)
 
 ### **ข้อดีหลักของ Caddy ในองค์กร:**
 
