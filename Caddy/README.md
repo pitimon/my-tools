@@ -1,5 +1,5 @@
 ## 🎯 สรุปสำคัญ: Enterprise Caddy Implementation
-- [podcast](https://nc.thaicloud.ai/index.php/s/jptizLdTrW8iAm4)
+- [My-podcast](https://nc.thaicloud.ai/index.php/s/jptizLdTrW8iAm4)
 - [detail](./ReadmeExpand.md)
 - [A/B deployment](./a-b-deploy.md)
 
