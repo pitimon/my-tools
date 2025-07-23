@@ -13,7 +13,6 @@
 - [ประสบการณ์ Ansible ในโปรเจ็ค Infrastructure Automation](#ประสบการณ์-ansible-ในโปรเจ็ค-infrastructure-automation)
   - [Table of Contents](#table-of-contents)
   - [Architecture และ Workflow Diagrams](#architecture-และ-workflow-diagrams)
-    - [Infrastructure Overview](#infrastructure-overview)
     - [Ansible Playbook Workflow](#ansible-playbook-workflow)
     - [Phase Implementation Strategy](#phase-implementation-strategy)
     - [CIS Compliance Framework](#cis-compliance-framework)
@@ -95,57 +94,6 @@
 
 ## Architecture และ Workflow Diagrams
 
-### Infrastructure Overview
-
-```mermaid
-graph TB
-    subgraph "Infrastructure Overview"
-        LB[Load Balancer<br/>172.16.34.9]
-        
-        subgraph "Docker Swarm Cluster"
-            SW1[Swarm Manager<br/>rem452]
-            SW2[Worker Node<br/>rem1002]
-            SW3[Worker Node<br/>rem1042]
-            SW4[Worker Node<br/>rem1062]
-            SW5[Worker Node<br/>rem1102]
-        end
-        
-        subgraph "Production Servers"
-            PS1[Production Host<br/>rem132]
-            PS2[Production Host<br/>rem1012]
-            PS3[Production Host<br/>rem1022]
-            PSN[... 45+ hosts]
-        end
-        
-        subgraph "Test Environment"
-            T1[Test Server<br/>srv-test-01]
-            T2[Test Server<br/>srv-test-02]
-        end
-        
-        subgraph "Monitoring & Security"
-            W1[Wazuh Manager]
-            P1[Portainer]
-            M1[Monitoring Stack]
-        end
-    end
-    
-    LB --> SW1
-    SW1 --> SW2
-    SW1 --> SW3
-    SW1 --> SW4
-    SW1 --> SW5
-    
-    W1 -.-> PS1
-    W1 -.-> PS2
-    W1 -.-> PS3
-    W1 -.-> SW2
-    
-    style SW1 fill:#ff9999
-    style T1 fill:#99ff99
-    style T2 fill:#99ff99
-    style W1 fill:#ffcc99
-```
-
 ### Ansible Playbook Workflow
 
 ```mermaid
@@ -211,34 +159,67 @@ graph TD
 ### Phase Implementation Strategy
 
 ```mermaid
-gantt
-    title Ansible Infrastructure Automation Timeline
-    dateFormat  YYYY-MM-DD
-    section Phase 1: Testing
-    Test Server Setup           :done, test1, 2025-07-19, 1d
-    Playbook Development        :done, dev1, 2025-07-19, 2d
-    Ubuntu Upgrade Testing      :done, test2, 2025-07-20, 1d
-    Validation Suite Testing    :done, test3, 2025-07-21, 1d
+graph TD
+    subgraph "Phase 1: Testing & Validation"
+        A1[Test Server Setup<br/>✅ Complete]
+        A2[Playbook Development<br/>✅ Complete]
+        A3[Ubuntu Upgrade Testing<br/>✅ Complete]
+        A4[Validation Suite Testing<br/>✅ Complete]
+        A1 --> A2 --> A3 --> A4
+    end
     
-    section Phase 2: Production
-    Batch 1 Deployment          :done, batch1, 2025-07-21, 1d
-    Batch 1 Validation          :done, val1, 2025-07-21, 1d
-    Batch 2 Deployment          :done, batch2, 2025-07-21, 1d
-    Batch 2 Validation          :done, val2, 2025-07-22, 1d
-    Batch 3 Deployment          :done, batch3, 2025-07-22, 1d
-    Batch 4 & 5 Deployment      :active, batch45, 2025-07-23, 2d
+    subgraph "Phase 2: Production Deployment"
+        B1[Batch 1: 9 servers<br/>✅ Complete]
+        B2[Batch 2: 10 servers<br/>✅ Complete]
+        B3[Batch 3: 10 servers<br/>✅ Complete]
+        B4[Batch 4: 9 servers<br/>🔄 In Progress]
+        B5[Batch 5: 10 servers<br/>⏳ Planned]
+        B1 --> B2 --> B3 --> B4 --> B5
+    end
     
-    section Phase 3: Critical
-    Swarm Worker Planning       :planning, swarm1, 2025-07-25, 3d
-    Rolling Upgrade Strategy    :planning, swarm2, 2025-07-28, 2d
-    Swarm Worker Deployment     :swarm3, 2025-07-30, 5d
+    subgraph "Phase 3: Critical Infrastructure"
+        C1[Swarm Worker Planning<br/>⏳ Planned]
+        C2[Rolling Upgrade Strategy<br/>⏳ Planned]
+        C3[Swarm Worker Deployment<br/>⏳ Future]
+        C1 --> C2 --> C3
+    end
     
-    section Security Hardening
-    CIS Level 1 Development     :done, cis1, 2025-07-22, 1d
-    CIS Level 1 Deployment      :done, cis2, 2025-07-22, 1d
-    CIS Level 2 Planning        :active, cis3, 2025-07-23, 2d
-    Wazuh Integration           :done, wazuh, 2025-07-23, 1d
+    subgraph "Security Hardening Track"
+        S1[CIS Level 1 Development<br/>✅ Complete]
+        S2[CIS Level 1 Deployment<br/>✅ Complete]
+        S3[CIS Level 2 Planning<br/>🔄 Active]
+        S4[Wazuh Integration<br/>✅ Complete]
+        S1 --> S2 --> S3
+        S2 --> S4
+    end
+    
+    A4 --> B1
+    B5 --> C1
+    A4 --> S1
+    
+    style A1 fill:#c8e6c9
+    style A2 fill:#c8e6c9
+    style A3 fill:#c8e6c9
+    style A4 fill:#c8e6c9
+    style B1 fill:#c8e6c9
+    style B2 fill:#c8e6c9
+    style B3 fill:#c8e6c9
+    style B4 fill:#fff3cd
+    style B5 fill:#f8d7da
+    style C1 fill:#f8d7da
+    style C2 fill:#f8d7da
+    style C3 fill:#f8d7da
+    style S1 fill:#c8e6c9
+    style S2 fill:#c8e6c9
+    style S3 fill:#fff3cd
+    style S4 fill:#c8e6c9
 ```
+
+**Timeline Summary:**
+- **Phase 1:** Week 1 (Jul 19-21) - Testing Complete ✅
+- **Phase 2:** Week 2-3 (Jul 21-23) - 29/48 servers upgraded ✅
+- **Phase 3:** Week 4+ (Jul 25+) - Critical infrastructure planned ⏳
+- **Security:** Parallel track - CIS Level 1 deployed ✅
 
 ### CIS Compliance Framework
 
